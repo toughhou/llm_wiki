@@ -9,6 +9,40 @@ Two integration paths:
 
 ---
 
+## Do I need an API key?
+
+The MCP server (and CLI) run as **separate processes** that are independent
+of Claude's own model connection. They cannot delegate LLM calls back to
+Claude — they must make their own HTTP requests to an LLM provider.
+
+| Tool | Needs LLM? | Needs API key? |
+|---|---|---|
+| `wiki_status` | No | **No** |
+| `wiki_search` | No | **No** |
+| `wiki_graph` | No | **No** |
+| `wiki_insights` | No | **No** |
+| `wiki_lint` | No | **No** |
+| `wiki_ingest` | **Yes** | **Yes** (`OPENAI_API_KEY` or `LLM_API_KEY`) |
+| `wiki_deep_research` | **Yes** | **Yes** (LLM + `TAVILY_API_KEY`) |
+
+The first five tools are pure graph / text-search operations and work with
+no keys at all.
+
+### Using a local model (no paid key)
+
+Point the server at a local [Ollama](https://ollama.com) instance — no
+API key is needed:
+
+```json
+"env": {
+  "WIKI_PATH": "/Users/me/notes/my-wiki",
+  "LLM_BASE_URL": "http://localhost:11434",
+  "LLM_MODEL": "llama3.2"
+}
+```
+
+---
+
 ## 1. Claude Desktop (MCP)
 
 ### Install
@@ -127,5 +161,6 @@ llm-wiki deep-research <wiki_root> <topic>
   for startup errors. The server logs `llm-wiki MCP server vX started`
   on success.
 - **`No LLM configured`**: set `OPENAI_API_KEY` (or `LLM_API_KEY`) and
-  `LLM_BASE_URL` in the `env` block, not just in your shell.
+  `LLM_BASE_URL` in the `env` block, not just in your shell. Alternatively
+  set `LLM_BASE_URL` to a local Ollama URL and omit the key entirely.
 - **`No web search results`** during deep research: set `TAVILY_API_KEY`.

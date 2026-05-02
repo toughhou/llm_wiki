@@ -84,6 +84,9 @@ node skill/dist/cli.js deep-research ~/notes/my-wiki "Mixture of Experts"
 
 Exact JSON schemas are in `skill/src/mcp-server.ts`.
 
+Tools marked **★ LLM** call an LLM API and require `OPENAI_API_KEY` (or
+`LLM_API_KEY`). The remaining tools are pure computation — no key needed.
+
 | Tool | Required args | Optional args |
 |---|---|---|
 | `wiki_status` | — | `project_path` |
@@ -91,8 +94,15 @@ Exact JSON schemas are in `skill/src/mcp-server.ts`.
 | `wiki_graph` | — | `project_path`, `format` (`summary`\|`json`) |
 | `wiki_insights` | — | `project_path`, `max_connections`, `max_gaps` |
 | `wiki_lint` | — | `project_path` |
-| `wiki_ingest` | `source_file` | `project_path`, `folder_context` |
-| `wiki_deep_research` | `topic` | `project_path`, `search_queries`, `auto_ingest` |
+| `wiki_ingest` ★ LLM | `source_file` | `project_path`, `folder_context` |
+| `wiki_deep_research` ★ LLM | `topic` | `project_path`, `search_queries`, `auto_ingest` |
+
+> **Note**: Even when used inside Cursor, Claude Desktop, or VS Code
+> Copilot Chat, the MCP server runs as an independent subprocess. It
+> cannot delegate LLM calls to the host AI's model — it must make its
+> own HTTP calls to an LLM provider. To avoid a paid API key, set
+> `LLM_BASE_URL=http://localhost:11434` and use a local
+> [Ollama](https://ollama.com) model.
 
 ## Configuration (env vars)
 

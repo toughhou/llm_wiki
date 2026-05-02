@@ -2,6 +2,39 @@
 
 Cursor supports MCP servers natively (Settings → Features → MCP).
 
+## Do I need an API key?
+
+The MCP server runs as a **separate subprocess** that Cursor launches. It
+cannot reuse or delegate to Cursor's own model connection — MCP tools are
+independent processes that must make their own LLM API calls.
+
+| Tool | Needs LLM? | Needs API key? |
+|---|---|---|
+| `wiki_status` | No | **No** |
+| `wiki_search` | No | **No** |
+| `wiki_graph` | No | **No** |
+| `wiki_insights` | No | **No** |
+| `wiki_lint` | No | **No** |
+| `wiki_ingest` | **Yes** | **Yes** (`OPENAI_API_KEY` or `LLM_API_KEY`) |
+| `wiki_deep_research` | **Yes** | **Yes** (LLM + `TAVILY_API_KEY`) |
+
+The first five tools are pure graph / text-search operations and work with
+no keys at all. Only `wiki_ingest` and `wiki_deep_research` call an LLM and
+require credentials.
+
+### Using a local model (no paid key)
+
+If you don't want to pay for an API, point the server at a local
+[Ollama](https://ollama.com) instance — no API key is needed:
+
+```json
+"env": {
+  "WIKI_PATH": "/Users/me/notes/my-wiki",
+  "LLM_BASE_URL": "http://localhost:11434",
+  "LLM_MODEL": "llama3.2"
+}
+```
+
 ## Install
 
 ```bash
@@ -74,3 +107,12 @@ Same 7 tools as Claude Desktop:
 `wiki_lint`, `wiki_ingest`, `wiki_deep_research`.
 
 See [`architecture.md`](./architecture.md) for the full env-var list.
+
+## Troubleshooting
+
+- **MCP tool not appearing**: open Cursor → `Cmd+,` → search `MCP` → click
+  **Refresh**. Check logs at `~/.cursor/logs/` for startup errors.
+- **`No LLM configured`**: set `OPENAI_API_KEY` (or `LLM_API_KEY`) and
+  `LLM_BASE_URL` in the `env` block, not just in your shell. Alternatively
+  set `LLM_BASE_URL` to a local Ollama URL and omit the key entirely.
+- **`No web search results`** during deep research: set `TAVILY_API_KEY`.

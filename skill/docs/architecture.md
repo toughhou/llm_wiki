@@ -93,6 +93,44 @@ skill/
 └── docs/                     # this file + usage-* + test-report.md
 ```
 
+## Why the MCP server cannot use the host AI's model
+
+A common question: *"I'm running this inside Cursor / Claude Desktop — can
+`wiki_ingest` just use Cursor's model instead of requiring my own API key?"*
+
+**No.** Here is why:
+
+```
+Host AI (Cursor / Claude)
+  │
+  │  MCP call: wiki_ingest(source_file="...")
+  ▼
+MCP server subprocess  ← isolated process, no model access
+  │
+  │  independent HTTP request to LLM API (OPENAI_API_KEY required)
+  ▼
+LLM provider (OpenAI / Ollama / OpenRouter / ...)
+```
+
+The MCP server is a plain Node.js process launched by the host. The MCP
+protocol defines tool calls as function invocations with JSON
+input/output — there is no mechanism for the subprocess to delegate a
+generation request back to the host's model connection.
+
+**Tools that require no LLM at all** (`wiki_status`, `wiki_search`,
+`wiki_graph`, `wiki_insights`, `wiki_lint`) work with zero configuration.
+
+**Tools that require LLM** (`wiki_ingest`, `wiki_deep_research`) must have
+`OPENAI_API_KEY` (or `LLM_API_KEY`) set — or `LLM_BASE_URL` pointing to a
+local Ollama server (no key required):
+
+```json
+"env": {
+  "LLM_BASE_URL": "http://localhost:11434",
+  "LLM_MODEL": "llama3.2"
+}
+```
+
 ## Configuration model
 
 All runtime configuration is **env-var driven**. There are no config
